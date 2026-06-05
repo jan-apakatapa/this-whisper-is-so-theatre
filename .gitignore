@@ -1,0 +1,34 @@
+# Артефакты Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Виртуальные окружения
+.venv/
+venv/
+env/
+
+# Данные и результаты работы утилит
+data/
+segments/
+*.wav
+annotations.csv
+result.txt
+
+# Модели и контрольные точки
+*.bin
+*.pt
+*.ckpt
+checkpoints/
+
+# Служебные файлы ОС и редакторов
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Jupyter
+.ipynb_checkpoints/

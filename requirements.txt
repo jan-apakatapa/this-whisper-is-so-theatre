@@ -1,0 +1,19 @@
+# Формирование набора данных (dataset_builder)
+soundfile
+sounddevice
+webrtcvad
+
+# Черновая расшифровка (scripts/transcribe.py)
+faster-whisper
+deep-translator
+torch
+
+# Оценка качества (evaluation)
+jiwer
+streamlit
+plotly
+matplotlib
+
+# Общие зависимости
+pandas
+numpy
