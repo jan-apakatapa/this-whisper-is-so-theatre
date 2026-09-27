@@ -1,31 +1,64 @@
-> Theatre ASR Toolkit — набор инструментов для исследования автоматического распознавания речи (Automatic Speech Recognition) в условиях театральной среды на основе моделей семейства [Whisper](https://arxiv.org/abs/2212.04356) от [OpenAI](https://openai.com/). Проект разработан в рамках курсового исследования по теме «Разработка системы автоматического текстового сопровождения театральных постановок на основе нейронных моделей распознавания речи» и направлен на повышение доступности театрального искусства для людей с нарушениями слуха.
->
-> В отличие от типовых сценариев применения моделей распознавания речи, ориентированных на чистые студийные записи, театральная среда характеризуется фоновой музыкой, наложением реплик, эмоциональной окраской речи и нестабильной акустикой. Репозиторий объединяет инструменты, покрывающие полный цикл исследования: формирование размеченного набора данных на материале реальных постановок, черновую расшифровку записей, дообучение компактных моделей Whisper (`tiny`, `small`) и количественную оценку качества распознавания по метрикам WER и CER.
+# Theatre ASR Toolkit
 
-> Общая схема конвейера обработки данных показана ниже:
->
-> ![Конвейер обработки данных](imgs/pipeline.png)
+[Русская версия](README.ru.md)
 
-## Overview
+Tools for studying automatic speech recognition (ASR) of Russian theatrical speech with OpenAI's [Whisper](https://arxiv.org/abs/2212.04356) models. The goal is accessible theatre: automatic captions for deaf and hard-of-hearing audiences.
 
-Проект решает прикладную задачу: оценить применимость и дообучаемость моделей Whisper для распознавания русскоязычной театральной речи. Работа построена вокруг трёх театральных постановок, для каждой из которых был сформирован собственный набор данных, а качество распознавания измерялось до и после дообучения.
+Most ASR benchmarks use clean studio recordings. Theatre audio is different: background music, overlapping lines, emotionally charged delivery and unstable acoustics. This repository covers the full research cycle — building an annotated dataset from real performance recordings, draft transcription, fine-tuning compact Whisper models (`tiny`, `small`), and evaluating recognition quality with WER and CER.
 
-Ключевая особенность подхода — наличие полного инструментария собственной разработки: от графической утилиты формирования датасета с автоматическим детектированием речевых сегментов до веб-приложения для пофрагментного сравнения расшифровок с эталоном.
+![Data processing pipeline](imgs/pipeline.png)
+
+## Research question
+
+How well do Whisper models transcribe Russian theatrical speech out of the box, and how much does fine-tuning on in-domain data help? The study covers three stage productions: a fully manual reference exists for one, aligned datasets are being built for the others.
+
+## Results so far
+
+### Stage 1: baseline and first fine-tuning
+
+Numbers are for *Masquerade* (Alexandrinsky Theatre), the production with a complete manually annotated reference.
+
+| Model | WER | CER |
+| --- | --- | --- |
+| Whisper tiny, zero-shot | 53.0% | 26.6% |
+| Whisper tiny, fine-tuned | 65.7% | 37.7% |
+| Whisper small, zero-shot | 32.9% | 17.9% |
+| Whisper small, fine-tuned | 43.8% | 27.8% |
+| Whisper large-v3, zero-shot | 18.3% | — |
+
+With about 400 in-domain segments and a random train/test split, fine-tuning `tiny` and `small` consistently increased error rates — a clear case of overfitting on a small dataset.
+
+### Stage 2: annotation by alignment
+
+Manual annotation is the main bottleneck, so datasets are now labelled automatically by aligning Whisper output with the play script. On *Masquerade*, these automatic labels reach 11.5% WER against the manual reference, compared with 18.3% for raw Whisper large-v3 output.
+
+### Stage 3: fine-tuning on aligned data
+
+Whisper small with a frozen encoder was fine-tuned on the first 80% of *Masquerade* and tested on two sets it had never seen: the final 20% of the same performance (different scenes) and a different production, *Dream of Autumn* (Lensovet Theatre).
+
+| Test set | WER before | WER after | Change |
+| --- | --- | --- | --- |
+| *Masquerade*, final 20% (unseen scenes) | 25.5% | 23.8% | −1.7 |
+| *Dream of Autumn* (unseen production) | 38.4% | 64.2% | +25.8 |
+
+For the first time, fine-tuning did not hurt within the same production: WER dropped slightly on unseen scenes. The gain is small and the test set is short (42 segments, about 6 minutes), so it may be within noise. On a different production, however, performance dropped sharply: the model adapted to one performance and lost generality. Next steps: training on several productions at once, fewer training steps and parameter-efficient methods.
+
+Note: the *Dream of Autumn* reference was produced by the alignment method, not by full manual annotation.
 
 ## Components
 
-| Компонент | Назначение | Технологии |
+| Component | Purpose | Stack |
 | --- | --- | --- |
-| [`dataset_builder`](dataset_builder/) | Формирование набора данных: детектирование речевых сегментов и ручная разметка | WebRTC VAD, Tkinter, ffmpeg |
-| [`evaluation`](evaluation/) | Оценка качества распознавания: метрики, анализ ошибок, визуализация | Streamlit, jiwer, Plotly |
-| [`scripts/transcribe.py`](scripts/transcribe.py) | Черновая расшифровка видеофайлов | faster-whisper, PyTorch |
-| [`scripts/normalize_text.py`](scripts/normalize_text.py) | Нормализация текста перед сравнением | Tkinter |
-| [`scripts/merge_datasets.py`](scripts/merge_datasets.py) | Объединение наборов данных | pandas, Tkinter |
-| [`notebooks/whisper_finetune.ipynb`](notebooks/whisper_finetune.ipynb) | Дообучение модели Whisper | Hugging Face Transformers, Google Colab |
+| [`dataset_builder`](dataset_builder) | Dataset creation: speech segment detection and manual annotation | WebRTC VAD, Tkinter, ffmpeg |
+| [`evaluation`](evaluation) | Evaluation: metrics, error analysis, visualisation | Streamlit, jiwer, Plotly |
+| [`scripts/transcribe.py`](scripts/transcribe.py) | Draft transcription of video recordings | faster-whisper, PyTorch |
+| [`scripts/normalize_text.py`](scripts/normalize_text.py) | Text normalisation before comparison | Tkinter |
+| [`scripts/merge_datasets.py`](scripts/merge_datasets.py) | Merging datasets | pandas, Tkinter |
+| [`notebooks/whisper_finetune.ipynb`](notebooks/whisper_finetune.ipynb) | Fine-tuning Whisper | Hugging Face Transformers, Google Colab |
 
-## Getting Started
+## Getting started
 
-Требуется Python 3.9 или новее и установленный в системе [ffmpeg](https://ffmpeg.org/).
+Requires Python 3.9+ and [ffmpeg](https://ffmpeg.org/) installed on your system.
 
 ```bash
 git clone https://github.com/jan-apakatapa/this-whisper-is-so-theatre.git
@@ -37,57 +70,63 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Типовой сценарий работы:
+Typical workflow:
 
-1. **Сформировать набор данных** из видеозаписи постановки:
+1. **Build a dataset** from a performance recording:
+
    ```bash
    python -m dataset_builder.main
    ```
-   Утилита извлекает аудио, автоматически выделяет речевые сегменты и открывает окно ручной разметки. Результат сохраняется в `annotations.csv`, сегменты — в каталог `data/segments`.
 
-2. **(Опционально) Получить черновую расшифровку** для ускорения разметки:
+   The tool extracts audio, detects speech segments automatically and opens a manual annotation window. Annotations are saved to `annotations.csv`, segments to `data/segments`.
+
+2. **(Optional) Get a draft transcription** to speed up annotation:
+
    ```bash
    python scripts/transcribe.py
    ```
 
-3. **Очистить пустые аннотации** после разметки:
+3. **Remove empty annotations**:
+
    ```bash
    python -m dataset_builder.clean_annotations annotations.csv
    ```
 
-4. **Дообучить модель** — см. тетрадь [`notebooks/whisper_finetune.ipynb`](notebooks/whisper_finetune.ipynb) (рассчитана на запуск в Google Colab с GPU).
+4. **Fine-tune the model** with [`notebooks/whisper_finetune.ipynb`](notebooks/whisper_finetune.ipynb) (designed for Google Colab with a GPU).
 
-5. **Оценить качество распознавания**:
+5. **Evaluate recognition quality**:
+
    ```bash
    streamlit run evaluation/app.py
    ```
-   Приложение принимает три транскрипции (эталон, вывод Whisper Tiny и Small) и выводит метрики WER и CER, анализ ошибок, частоту галлюцинаций и инструменты пофрагментного сравнения.
 
-## Project Structure
+   The app takes three transcriptions (reference, Whisper tiny, Whisper small) and reports WER and CER, error breakdown, hallucination rate and segment-by-segment comparison.
+
+## Project structure
 
 ```
 this-whisper-is-so-theatre/
-├── dataset_builder/             # Утилита формирования набора данных
-│   ├── main.py                  #   точка входа (GUI)
-│   ├── main_window.py           #   главное окно
-│   ├── audio_utils.py           #   извлечение аудио (ffmpeg)
-│   ├── segmenter.py             #   детектирование речевых сегментов (VAD)
-│   ├── annotation_window.py     #   ручная разметка сегментов
-│   ├── exporter.py              #   экспорт в CSV
-│   ├── clean_annotations.py     #   очистка пустых аннотаций
-│   └── models.py                #   структуры данных
-├── evaluation/                  # Инструмент оценки качества (Streamlit)
-│   ├── app.py                   #   веб-приложение
-│   ├── chunking.py              #   разбиение текста на фрагменты
-│   ├── metrics.py               #   метрики WER, CER, анализ ошибок
-│   ├── visualization.py         #   визуализация результатов
-│   └── utils.py                 #   вспомогательные функции
-├── scripts/                     # Самостоятельные утилиты
-│   ├── transcribe.py            #   черновая расшифровка (faster-whisper)
-│   ├── normalize_text.py        #   нормализация текста
-│   └── merge_datasets.py        #   объединение наборов данных
+├── dataset_builder/             # Dataset creation tool
+│   ├── main.py                  #   entry point (GUI)
+│   ├── main_window.py           #   main window
+│   ├── audio_utils.py           #   audio extraction (ffmpeg)
+│   ├── segmenter.py             #   speech segment detection (VAD)
+│   ├── annotation_window.py     #   manual segment annotation
+│   ├── exporter.py              #   CSV export
+│   ├── clean_annotations.py     #   empty annotation cleanup
+│   └── models.py                #   data structures
+├── evaluation/                  # Evaluation tool (Streamlit)
+│   ├── app.py                   #   web app
+│   ├── chunking.py              #   text chunking
+│   ├── metrics.py               #   WER, CER, error analysis
+│   ├── visualization.py         #   result visualisation
+│   └── utils.py                 #   helpers
+├── scripts/                     # Standalone utilities
+│   ├── transcribe.py            #   draft transcription (faster-whisper)
+│   ├── normalize_text.py        #   text normalisation
+│   └── merge_datasets.py        #   dataset merging
 ├── notebooks/
-│   └── whisper_finetune.ipynb   # Дообучение Whisper (Google Colab)
+│   └── whisper_finetune.ipynb   # Whisper fine-tuning (Google Colab)
 ├── imgs/
 ├── requirements.txt
 ├── LICENSE
@@ -96,19 +135,20 @@ this-whisper-is-so-theatre/
 
 ## Metrics
 
-Качество распознавания оценивается по двум основным метрикам:
+- **WER (Word Error Rate)** — substitutions, insertions and deletions divided by the number of words in the reference.
+- **CER (Character Error Rate)** — the same at character level; more informative for inflected languages such as Russian.
 
-- **WER (Word Error Rate)** — частота ошибок на уровне слов, вычисляется как отношение суммы подстановок, вставок и удалений к общему числу слов эталона;
-- **CER (Character Error Rate)** — частота ошибок на уровне символов; информативна для флективных языков, к которым относится русский.
+The evaluation tool also reports a detailed error breakdown and the model's **hallucination rate**: the share of generated words that are absent from the audio.
 
-Дополнительно вычисляются детализированная статистика ошибок (подстановки, вставки, удаления) и частота галлюцинаций модели — доля порождённых слов, отсутствующих в исходном аудиосигнале.
+## About the project
 
-## Author
+Developed as undergraduate research at HSE University, St Petersburg (2026): *Developing an automatic captioning system for theatre performances based on neural speech recognition models*. The work continues as a bachelor's thesis.
 
-Проект разработан в рамках курсового исследования.
+**Author:** Eva Borodaenko
+**Supervisor:** Victoria Firsanova, Senior Lecturer, Department of Philology, HSE University
 
-**Бородаенко Ева** — автор исследования и кода.
-Код был написан с помощью Github Copilot, Claude Haiku 4.5 и GPT-4.1
-Научный руководитель: **Фирсанова Виктория Игоревна**, старший преподаватель департамента филологии.
+Parts of the code were written with the help of AI coding assistants (GitHub Copilot, Claude Haiku 4.5, GPT-4.1).
 
-Национальный исследовательский университет «Высшая школа экономики», Санкт-Петербург, 2026.
+## License
+
+See [LICENSE](LICENSE).
