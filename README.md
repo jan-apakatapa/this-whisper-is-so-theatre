@@ -10,40 +10,64 @@ Most ASR benchmarks use clean studio recordings. Theatre audio is different: bac
 
 ## Research question
 
-How well do Whisper models transcribe Russian theatrical speech out of the box, and how much does fine-tuning on in-domain data help? The study covers three stage productions: a fully manual reference exists for one, aligned datasets are being built for the others.
+What does Whisper learn when it is fine-tuned on a recording of one theatre production, and can the play script give the same gain without training?
 
-## Results so far
+## Corpus
 
-### Stage 1: baseline and first fine-tuning
+Four annotated productions, with a fifth (Bulgakov's *Flight*) currently being annotated:
 
-Numbers are for *Masquerade* (Alexandrinsky Theatre), the production with a complete manually annotated reference.
-
-| Model | WER | CER |
+| Production | Type | Test set used below |
 | --- | --- | --- |
-| Whisper tiny, zero-shot | 53.0% | 26.6% |
-| Whisper tiny, fine-tuned | 65.7% | 37.7% |
-| Whisper small, zero-shot | 32.9% | 17.9% |
-| Whisper small, fine-tuned | 43.8% | 27.8% |
-| Whisper large-v3, zero-shot | 18.3% | — |
+| *Masquerade* (Lermontov), Alexandrinsky Theatre | verse drama | whole recording, 206 segments, 38.1 min |
+| *Dream of Autumn* (Fosse), Lensovet Theatre | play with long silences | whole recording, 57 segments, 6.3 min |
+| "Show", student theatre Svoy Variant | play about a reality show | final 20%, 151 segments, 14.0 min |
+| "Play", student theatre Svoy Variant | contemporary play | final 20%, 196 segments, 17.6 min |
 
-With about 400 in-domain segments and a random train/test split, fine-tuning `tiny` and `small` consistently increased error rates — a clear case of overfitting on a small dataset.
+Labels are produced semi-automatically: Whisper large-v3 output is aligned with the play script, and segments that do not match are checked by ear. On *Masquerade* these labels reach 11.5% WER against a fully manual reference, compared with 18.3% for raw Whisper large-v3. A random listening check of 64 segments found 2–4% WER in the labels.
 
-### Stage 2: annotation by alignment
+## Protocol
 
-Manual annotation is the main bottleneck, so datasets are now labelled automatically by aligning Whisper output with the play script. On *Masquerade*, these automatic labels reach 11.5% WER against the manual reference, compared with 18.3% for raw Whisper large-v3 output.
+Each training production is split by time: the first 70% for training, 70–80% for validation (the checkpoint is chosen by validation loss), the final 20% for testing. The encoder is frozen and only the decoder is trained (150 steps, learning rate 1e-5, batch 8). Output length is capped by segment duration, and every result is reported as overall WER, median per-segment WER and the number of repetition loops; loops are not mentioned below because whisper-small produced none.
 
-### Stage 3: fine-tuning on aligned data
+## Results
 
-Whisper small with a frozen encoder was fine-tuned on the first 80% of *Masquerade* and tested on two sets it had never seen: the final 20% of the same performance (different scenes) and a different production, *Dream of Autumn* (Lensovet Theatre).
+### Fine-tuning helps only on the same production
 
-| Test set | WER before | WER after | Change |
+Overall WER (%) of whisper-small:
+
+| Model | "Play" (final 20%) | "Show" (final 20%) | *Masquerade* |
 | --- | --- | --- | --- |
-| *Masquerade*, final 20% (unseen scenes) | 25.5% | 23.8% | −1.7 |
-| *Dream of Autumn* (unseen production) | 38.4% | 64.2% | +25.8 |
+| no fine-tuning | 17.6 | 19.8 | 24.7 |
+| fine-tuned on "Show" | 18.2 | **15.6** | 23.8 |
+| fine-tuned on "Play" | **16.0** | 19.6 | 23.7 |
 
-For the first time, fine-tuning did not hurt within the same production: WER dropped slightly on unseen scenes. The gain is small and the test set is short (42 segments, about 6 minutes), so it may be within noise. On a different production, however, performance dropped sharply: the model adapted to one performance and lost generality. Next steps: training on several productions at once, fewer training steps and parameter-efficient methods.
+Fine-tuning lowers WER on later scenes of the same production and gives no gain on the neighbouring production of the same theatre, which shares some of the actors (±0.6 points). Words that occur only in the training play make up a 2.1–2.4 times larger share of the words fixed by fine-tuning than of all test words: the model mainly learns character names and plot vocabulary. whisper-tiny also improves on its own production but gets worse on *Masquerade*, mostly through repetition loops.
 
-Note: the *Dream of Autumn* reference was produced by the alignment method, not by full manual annotation.
+### A prompt from the play script helps only with names
+
+whisper-small without fine-tuning was given a prompt with the characters' names and up to 25 key words selected from the script ("own"), the prompt of a paired production ("foreign"), or none. Overall WER (%):
+
+| Test set | none | own | foreign |
+| --- | --- | --- | --- |
+| "Play" | 17.6 | 18.5 | 18.3 |
+| "Show" | 19.8 | **17.9** | 19.9 |
+| *Masquerade* | 24.7 | 27.8 | 27.6 |
+| *Dream of Autumn* | 30.7 | 39.4 | 39.1 |
+
+Paired bootstrap (10,000 resamples, 95% CI, no correction for multiple comparisons):
+
+- "Show": own prompt −1.87 points [−3.11; −0.71], about 45% of the fine-tuning gain on this test; the foreign prompt has no effect.
+- "Play" and *Masquerade*: no difference from zero, including a prompt built from Lermontov's original text.
+- *Dream of Autumn*: any prompt makes WER worse, +8.7 points [1.75; 17.51] for the own prompt.
+- Character names recognised correctly with the own prompt: 37% → 83% on "Show", 53% → 77% on "Play"; key words are recognised as before.
+
+### What changed since the course paper
+
+An earlier version of this README reported that fine-tuning on *Masquerade* increased WER and called it overfitting. Those results came from a random train/test split inside one production, a checkpoint chosen on the test set and audio files that no longer matched their labels. They are withdrawn; the results above use the corrected data and protocol.
+
+## Code status
+
+The components below are the toolkit from the course paper. The thesis code (script alignment, the fine-tuning matrix and the prompt experiment, currently run on Kaggle and Google Colab) is being prepared for release in this repository.
 
 ## Components
 
@@ -142,7 +166,7 @@ The evaluation tool also reports a detailed error breakdown and the model's **ha
 
 ## About the project
 
-Developed as undergraduate research at HSE University, St Petersburg (2026): *Developing an automatic captioning system for theatre performances based on neural speech recognition models*. The work continues as a bachelor's thesis.
+Developed as undergraduate research at HSE University, St Petersburg (2026): *Developing an automatic captioning system for theatre performances based on neural speech recognition models*. The work continues as a bachelor's thesis (in progress, defence in spring 2027): *A framework for automatic captioning of theatre performances grounded in the dramatic text and the features of theatrical speech*.
 
 **Author:** Eva Borodaenko
 **Supervisor:** Victoria Firsanova, Senior Lecturer, Department of Philology, HSE University
