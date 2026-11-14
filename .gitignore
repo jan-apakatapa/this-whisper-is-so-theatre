@@ -1,4 +1,4 @@
-# Артефакты Python
+# Python artefacts
 __pycache__/
 *.py[cod]
 *.egg-info/
@@ -6,29 +6,57 @@ __pycache__/
 build/
 dist/
 
-# Виртуальные окружения
+# Virtual environments
 .venv/
 venv/
 env/
 
-# Данные и результаты работы утилит
+# Secrets and local config
+.env
+.env.*
+*.token
+kaggle.json
+.huggingface/
+
+# Recordings, play texts and annotations (never published, see README "Data")
 data/
 segments/
+recordings/
 *.wav
+*.mp3
+*.flac
+*.ogg
+*.m4a
+*.mp4
+*.mkv
+*.mov
+*.avi
+*.webm
+*.docx
+*.zip
 annotations.csv
 result.txt
+prompt_preds/
+prompts_used.json
 
-# Модели и контрольные точки
+# Models, checkpoints and caches
 *.bin
 *.pt
+*.pth
 *.ckpt
+*.safetensors
+*.onnx
 checkpoints/
-
-# Служебные файлы ОС и редакторов
-.DS_Store
-.idea/
-.vscode/
-*.swp
+models/
+wandb/
+.cache/
 
 # Jupyter
 .ipynb_checkpoints/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
