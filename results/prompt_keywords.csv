@@ -1,0 +1,13 @@
+test,condition,keyword_tokens_in_reference,keyword_tokens_recognised
+P4,none,42,34
+P4,own,42,34
+P4,foreign,42,34
+P3,none,40,31
+P3,own,40,33
+P3,foreign,40,29
+P1,none,85,55
+P1,own,85,58
+P1,foreign,85,54
+P2,none,16,8
+P2,own,16,7
+P2,foreign,16,8

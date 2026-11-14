@@ -1,19 +1,24 @@
-# Формирование набора данных (dataset_builder)
-soundfile
-sounddevice
-webrtcvad
+# Tested with Python 3.13 on Linux (November 2026). Python 3.11+ is required.
+# System packages are also needed: ffmpeg, Tk (python3-tk) for the GUI tools,
+# PortAudio (libportaudio2) for audio playback in the annotation window.
+# The fine-tuning notebook installs its own dependencies in Google Colab.
 
-# Черновая расшифровка (scripts/transcribe.py)
-faster-whisper
-deep-translator
-torch
+# Dataset builder (dataset_builder/)
+soundfile==0.14.0
+sounddevice==0.5.6
+webrtcvad==2.0.10
 
-# Оценка качества (evaluation)
-jiwer
-streamlit
-plotly
-matplotlib
+# Draft transcription (scripts/transcribe.py)
+faster-whisper==1.2.1
+deep-translator==1.11.4
+torch==2.15.0
 
-# Общие зависимости
-pandas
-numpy
+# Evaluation app (evaluation/)
+jiwer==4.0.0
+streamlit==1.67.0
+plotly==7.1.0
+matplotlib==3.11.2
+
+# Shared
+pandas==3.1.1
+numpy==2.5.4

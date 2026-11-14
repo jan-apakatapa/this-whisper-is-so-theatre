@@ -1,0 +1,13 @@
+test,condition,name_tokens_in_reference,name_tokens_recognised,recognised_pct
+P4,none,60,32,53.3
+P4,own,60,46,76.7
+P4,foreign,60,29,48.3
+P3,none,46,17,37.0
+P3,own,46,38,82.6
+P3,foreign,46,19,41.3
+P1,none,7,5,71.4
+P1,own,7,5,71.4
+P1,foreign,7,5,71.4
+P2,none,0,0,
+P2,own,0,0,
+P2,foreign,0,0,

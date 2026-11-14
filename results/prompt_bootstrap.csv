@@ -1,0 +1,13 @@
+test,comparison,diff_pp,ci95_low,ci95_high,ci_excludes_0,n
+P4,own - none,0.88,-0.86,2.95,False,196
+P4,foreign - none,0.69,-0.43,2.03,False,196
+P4,own - foreign,0.18,-1.24,1.97,False,196
+P3,own - none,-1.87,-3.11,-0.71,True,151
+P3,foreign - none,0.13,-1.22,1.66,False,151
+P3,own - foreign,-1.99,-3.45,-0.75,True,151
+P1,own - none,3.04,-1.37,9.55,False,206
+P1,foreign - none,2.87,-0.3,7.0,False,206
+P1,own - foreign,0.17,-4.93,6.69,False,206
+P2,own - none,8.7,1.75,17.51,True,57
+P2,foreign - none,8.46,1.62,17.49,True,57
+P2,own - foreign,0.24,-1.82,2.42,False,57

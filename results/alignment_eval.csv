@@ -1,0 +1,3 @@
+production,reference,reference_words,system,wer_pct
+P1,full manual annotation,4742,automatic labels (Whisper large-v3 aligned to the play script),11.5
+P1,full manual annotation,4742,raw Whisper large-v3,18.3

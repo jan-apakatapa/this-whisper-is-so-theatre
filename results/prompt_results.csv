@@ -1,0 +1,13 @@
+condition,test,wer_pct,median_seg_wer_pct,repetition_loops,n_segments,prompt_from
+none,P4,17.6,16.7,0,196,
+own,P4,18.5,16.7,0,196,P4
+foreign,P4,18.3,16.7,0,196,P3
+none,P3,19.8,17.6,0,151,
+own,P3,17.9,15.4,0,151,P3
+foreign,P3,19.9,18.2,0,151,P4
+none,P1,24.7,25.0,0,206,
+own,P1,27.8,25.2,0,206,P1
+foreign,P1,27.6,26.5,0,206,P2
+none,P2,30.7,25.0,0,57,
+own,P2,39.4,30.0,0,57,P2
+foreign,P2,39.1,30.8,0,57,P1
